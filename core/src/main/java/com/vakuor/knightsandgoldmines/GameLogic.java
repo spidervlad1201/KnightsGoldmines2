@@ -115,22 +115,10 @@ public class GameLogic extends InputAdapter implements ApplicationListener {
         multiplexer.addProcessor(stage);
         multiplexer.addProcessor(uistage);
         player = new Player(50,20);
-        crate = new Crate(20,30);
+        //crate = new Crate(20,30);
         //enemy = new Enemy(25,25);
         enemies = new Array<Enemy>();
         spawnEnemy();
-
-        String path = Gdx.files.getLocalStoragePath();
-        path += "txt.txt";
-        try{
-            File file = new File(path);
-            PrintWriter writer = new PrintWriter(file);
-
-            BufferedReader reader = new BufferedReader(new FileReader(file));
-            //maxscore=reader.read()-'0';
-        } catch (IOException e){
-            e.printStackTrace();
-        }
 
         //enemies.add(enemy);
         aspectRatio = (float) Gdx.graphics.getWidth()/(float) Gdx.graphics.getHeight();
@@ -153,6 +141,7 @@ public class GameLogic extends InputAdapter implements ApplicationListener {
 
     @Override
     public void render() {
+        System.out.println(TimeUtils.millis());
         Gdx.gl.glClearColor(0.7f, 0.7f, 1.0f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         deltaTime = Gdx.graphics.getDeltaTime();
@@ -163,12 +152,14 @@ public class GameLogic extends InputAdapter implements ApplicationListener {
             player.died=false;rest=false;locals=false;
             player.setHealth(4);
             player.score=0;
+            lastEnemySpawnTime=5;
             create();
         }
 
         scoreLabel.setText("Score: "+String.valueOf(player.score));
 
-        if(TimeUtils.millis() - lastEnemySpawnTime > 10000) {spawnEnemy();dire=!dire;}
+        if(TimeUtils.millis() - lastEnemySpawnTime > 10000) {spawnEnemy();//dire=!dire;
+        }
         updateControls();
         // update the koala (process input, collision detection, position update)
         //enemy.move(enemy.position.x<player.position.x);
@@ -196,15 +187,6 @@ public class GameLogic extends InputAdapter implements ApplicationListener {
         // render debug rectangles
         if (debug) renderDebug();
         if(player.died && !locals){
-            String path = Gdx.files.getLocalStoragePath();
-            path += "txt.txt";
-            try{
-                File file = new File(path);
-                PrintWriter writer = new PrintWriter(file);
-                //writer.print(maxscore);
-            } catch (IOException e){
-                e.printStackTrace();
-            }
             Texture tex = new Texture("border.png");
             img = new Image(tex);
             img.setBounds(0,0,Gdx.graphics.getWidth(),Gdx.graphics.getHeight());

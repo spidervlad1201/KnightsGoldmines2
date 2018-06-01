@@ -13,11 +13,8 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pool;
 import com.vakuor.knightsandgoldmines.GameLogic;
-import com.vakuor.knightsandgoldmines.utilities.Timers;
 
-import static com.vakuor.knightsandgoldmines.GameLogic.GRAVITY;
 import static com.vakuor.knightsandgoldmines.GameLogic.myTile;
-import static com.vakuor.knightsandgoldmines.GameLogic.player;
 import static com.vakuor.knightsandgoldmines.GameLogic.tileDebug;
 
 public class Crate extends Actor {
