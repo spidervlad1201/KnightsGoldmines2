@@ -17,14 +17,12 @@ public class Main extends Game {
     private int frames;
     public static float aspectRatio;
 
-    long javaHeap;//лишнее
-    long nativeHeap;//лишнее
+    long javaHeap;//отладка
+    long nativeHeap;//отладка
 
     @Override
     public void create () {
         System.out.println("Main.create\n");
-        batch = new SpriteBatch();
-        font = new BitmapFont();
         fps = 60;
         manager = new AssetManager();
         this.setScreen(new Menu(this));
@@ -32,19 +30,16 @@ public class Main extends Game {
 
     @Override
     public void render () {
-//		Gdx.gl.glClearColor(0, 0, 0, 1);
-//		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         if(Gdx.input.isKeyPressed(Input.Keys.ESCAPE)) Gdx.app.exit();
         super.render();
         frames = Gdx.graphics.getFramesPerSecond();
         if(frames>0 && frames < Integer.MAX_VALUE)
             fps = frames;
-        javaHeap = Gdx.app.getJavaHeap();//потребление памяти Java//лишнее
-        nativeHeap = Gdx.app.getNativeHeap();//нативной heap памяти//лишнее
+        javaHeap = Gdx.app.getJavaHeap();//потребление памяти Java//отладка
+        nativeHeap = Gdx.app.getNativeHeap();//нативной heap памяти//отладка
     }
     @Override
     public void dispose () {
-        font.dispose();
-        batch.dispose();
+
     }
 }

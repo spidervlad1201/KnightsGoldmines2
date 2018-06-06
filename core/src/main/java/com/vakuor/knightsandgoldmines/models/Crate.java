@@ -12,11 +12,13 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pool;
-import com.vakuor.knightsandgoldmines.GameLogic;
+import com.vakuor.knightsandgoldmines.view.Game;
 
-import static com.vakuor.knightsandgoldmines.GameLogic.myTile;
-import static com.vakuor.knightsandgoldmines.GameLogic.tileDebug;
+import static com.vakuor.knightsandgoldmines.view.Game.deltaTime;
+import static com.vakuor.knightsandgoldmines.view.Game.myTile;
+import static com.vakuor.knightsandgoldmines.view.Game.tileDebug;
 
+@SuppressWarnings({"WeakerAccess", "FieldCanBeLocal"})
 public class Crate extends Actor {
     public static float WIDTH;
     public static float HEIGHT;
@@ -63,10 +65,10 @@ public class Crate extends Actor {
 
         //addVelocity(0, thisGRAVITY);
         // multiply by delta time so we know how far we go in this frame
-        velocity.scl(GameLogic.deltaTime);
+        velocity.scl(deltaTime);
         position.x+=0.25f; position.y+=0.2f;
         WIDTH-=0.5f; HEIGHT-=0.4f;
-        // perform collision detection & response, on each axis, separately//todo:вынести эту хрень отсюда
+        // perform collision detection & response, on each axis, separately//todo:вынести эту inere отсюда
         // if the player is moving right, check the tiles to the right of it's
         // right bounding box edge, otherwise check the ones to the left
         Rectangle playerRect = rectPool.obtain();
@@ -112,7 +114,7 @@ public class Crate extends Actor {
                 if (velocity.y > 0) {
                     position.y = tile.y - HEIGHT;
                     // we hit a block jumping upwards, let's destroy it!
-                    TiledMapTileLayer layer = (TiledMapTileLayer) GameLogic.map.getLayers().get("walls");
+                    TiledMapTileLayer layer = (TiledMapTileLayer) Game.map.getLayers().get("walls");
                     layer.setCell((int) tile.x, (int) tile.y, null);
                 } else {
                     position.y = tile.y + tile.height;
@@ -128,7 +130,7 @@ public class Crate extends Actor {
         position.x-=0.25f; position.y-=0.2f;
         WIDTH+=0.5f; HEIGHT+=0.4f;
         position.add(velocity);
-        velocity.scl(1 / GameLogic.deltaTime);
+        velocity.scl(1 / Game.deltaTime);
         // Apply damping to the velocity on the x-axis so we don't
         // walk infinitely once a key was pressed
         velocity.x *= DAMPING;
@@ -140,31 +142,6 @@ public class Crate extends Actor {
     @Override
     public void act(float deltaTime) {
         if(!died) {
-
-            /*if (GameLogic.player.position.x > position.x + WIDTH || GameLogic.player.position.x < position.x - WIDTH) {
-                attacking = false;
-                if (Math.abs(GameLogic.player.position.x + GameLogic.player.WIDTH / 2 - position.x + WIDTH / 2) > WIDTH * 3)
-                    zaderjka = 0;
-                move(position.x < GameLogic.player.position.x);
-            } else if (timesinceattacked > timeforattack && ((GameLogic.player.position.y <= position.y + HEIGHT) && (GameLogic.player.position.y + GameLogic.player.HEIGHT >= position.y))) {//attack(GameLogic.player);
-                zaderjka += GameLogic.deltaTime;
-                attacking = true;
-                if (zaderjka >= zaderjkamax) {
-                    attack();
-                }
-            } else {
-                zaderjka = 0;
-                attacking = false;
-            }
-
-            if (deltaTime == 0) return;
-
-            if (deltaTime > 0.1f) deltaTime = 0.1f;
-
-            //stateTime += GameLogic.deltaTime;
-
-            */
-
             // If the velocity is < 1, set it to 0 and set state to Standing
             update();
             super.act(deltaTime);
@@ -183,7 +160,7 @@ public class Crate extends Actor {
 
     }
     public void getTiles(int startX, int startY, int endX, int endY, Array<Rectangle> tiles, boolean tileDebug, TiledMapTile myTile) {
-        TiledMapTileLayer layer = (TiledMapTileLayer) GameLogic.map.getLayers().get("walls");
+        TiledMapTileLayer layer = (TiledMapTileLayer) Game.map.getLayers().get("walls");
         rectPool.freeAll(tiles);
         tiles.clear();
         for (int y = startY; y <= endY; y++) {

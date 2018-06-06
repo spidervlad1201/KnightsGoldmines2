@@ -13,16 +13,18 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pool;
-import com.vakuor.knightsandgoldmines.GameLogic;
+import com.vakuor.knightsandgoldmines.view.Game;
 
 import java.util.Iterator;
 
-import static com.vakuor.knightsandgoldmines.GameLogic.GRAVITY;
-import static com.vakuor.knightsandgoldmines.GameLogic.myTile;
-import static com.vakuor.knightsandgoldmines.GameLogic.tileDebug;
 import static com.vakuor.knightsandgoldmines.models.Player.Headstate.Calm;
 import static com.vakuor.knightsandgoldmines.models.Player.Headstate.Damn;
 import static com.vakuor.knightsandgoldmines.models.Player.Headstate.Worried;
+import static com.vakuor.knightsandgoldmines.view.Game.GRAVITY;
+import static com.vakuor.knightsandgoldmines.view.Game.myTile;
+import static com.vakuor.knightsandgoldmines.view.Game.swordSound;
+import static com.vakuor.knightsandgoldmines.view.Game.thudSound;
+import static com.vakuor.knightsandgoldmines.view.Game.tileDebug;
 
 public class Player extends Actor {
     public static float WIDTH;
@@ -89,6 +91,7 @@ public class Player extends Actor {
 
 
     private int health=4;
+    private float thudTime=0;
 
     private float localdeltapos=0;
     private boolean localbool;
@@ -156,10 +159,10 @@ public class Player extends Actor {
     public void update(){
         addVelocity(0, GRAVITY);
         // multiply by delta time so we know how far we go in this frame
-        velocity.scl(GameLogic.deltaTime);
+        velocity.scl(Game.deltaTime);
         position.x+=0.25f; position.y+=0.2f;
         WIDTH-=0.5f; HEIGHT-=0.4f;
-        // perform collision detection & response, on each axis, separately//todo:вынести эту хрень отсюда
+        // perform collision detection & response, on each axis, separately//todo:вынести эту inere отсюда
         // if the player is moving right, check the tiles to the right of it's
         // right bounding box edge, otherwise check the ones to the left
         Rectangle playerRect = rectPool.obtain();
@@ -212,7 +215,7 @@ public class Player extends Actor {
                 if (velocity.y > 0) {
                     position.y = tile.y - HEIGHT;
                     // we hit a block jumping upwards, let's destroy it!
-                    TiledMapTileLayer layer = (TiledMapTileLayer) GameLogic.map.getLayers().get("walls");
+                    TiledMapTileLayer layer = (TiledMapTileLayer) Game.map.getLayers().get("walls");
                     layer.setCell((int) tile.x, (int) tile.y, null);
                 } else {
                     position.y = tile.y + tile.height;
@@ -228,14 +231,14 @@ public class Player extends Actor {
         position.x-=0.25f; position.y-=0.2f;
         WIDTH+=0.5f; HEIGHT+=0.4f;
         position.add(velocity);
-        velocity.scl(1 / GameLogic.deltaTime);
+        velocity.scl(1 / Game.deltaTime);
         // Apply damping to the velocity on the x-axis so we don't
         // walk infinitely once a key was pressed
         velocity.x *= DAMPING;
     }
 
     public void getTiles(int startX, int startY, int endX, int endY, Array<Rectangle> tiles, boolean tileDebug, TiledMapTile myTile) {
-        TiledMapTileLayer layer = (TiledMapTileLayer) GameLogic.map.getLayers().get("walls");
+        TiledMapTileLayer layer = (TiledMapTileLayer) Game.map.getLayers().get("walls");
         rectPool.freeAll(tiles);
         tiles.clear();
         for (int y = startY; y <= endY; y++) {
@@ -251,7 +254,12 @@ public class Player extends Actor {
         }
     }
     public void attack(Array<Enemy> enemies){
+
+        if(attacktime <= attackingtimemax && !attackedsmb)shooting=true;
         if(!attackedsmb){
+            if(!died)swordSound.play();
+//            Game.kickSound.play();
+
             Iterator<Enemy> iter = enemies.iterator();
             while(iter.hasNext()) {
                 Enemy thisenemy = iter.next();
@@ -276,8 +284,9 @@ public class Player extends Actor {
         if(mydir){addVelocity(2*hitconst,hitconst);}
         else {addVelocity(-2*hitconst,hitconst);}
         health-=1;
-        GameLogic.healthLabel.setText("HP: "+String.valueOf(health));
-        if(health<1) died=true;
+        Game.healthLabel.setText("HP: "+String.valueOf(health));
+        if(!died) Game.kickSound.play();
+        if(health<1) {if(!died)Game.screamSound.play();died=true;}
         headstate=Damn;
         damntime=0f;
     }
@@ -286,15 +295,15 @@ public class Player extends Actor {
 
         update();
         if(attackedsmbtimer>0){
-            attackedsmbtimer-=GameLogic.deltaTime;
+            attackedsmbtimer-=Game.deltaTime;
         }
 
         /*if(damntime<damntimemax)
-            damntime+=GameLogic.deltaTime;
+            damntime+=Game.deltaTime;
         */
         else attackedsmb=false;
 
-        damntime+=GameLogic.deltaTime;
+        damntime+=Game.deltaTime;
 
         if (deltaTime == 0) return;
 
@@ -308,18 +317,19 @@ public class Player extends Actor {
         else if(isGrounded()){climb=true;climbingTime=0;}
 
         // If the velocity is < 1, set it to 0 and set state to Standing
+
+        if (grounded && Math.abs(velocity.x)<0.2f) state = Player.State.Standing;
         if (Math.abs(velocity.x) < 1) {
             velocity.x = 0;
-            if (grounded) state = Player.State.Standing;
         }
 
         if(velocity.y<-5 || velocity.y > 10) state = State.Jumping;
 
         if(shooting) {
             if(headstate!=Damn)headstate = Worried;
-            if(attackType){bowtime += GameLogic.deltaTime; attacktime=0;}
-            else {attacktime += GameLogic.deltaTime;bowtime=0; }
-            facesRight = GameLogic.touchpadR.getKnobPercentX() >= 0;
+            if(attackType){bowtime += Game.deltaTime; attacktime=0;}
+            else {attacktime += Game.deltaTime;bowtime=0; }
+            facesRight = Game.touchpadR.getKnobPercentX() >= 0;
         }
         else {
             if(damntime>damntimemax){headstate = Calm;}//todo:1
@@ -332,6 +342,7 @@ public class Player extends Actor {
 
     @Override
     public void draw(Batch batch, float parentAlpha) {
+        if(attacktime > attackingtimemax)shooting=false;
         if (!died) {
             Player.HeadHEIGHT = 0.05f + position.y + Player.HEIGHT / 3 + headX;
 
@@ -346,9 +357,7 @@ public class Player extends Actor {
 
             switch (state) {
                 case Standing: {
-                    if (shooting && attackType) {
-                        frame = shotstand.getKeyFrame(stateTime);
-                    } else if (shooting && !attackType) {
+                    if (shooting && !attackType && (attacktime <= attackingtimemax)) {
                         frame = attackstand.getKeyFrame(attacktime);
                     } else {
                         frame = stand.getKeyFrame(stateTime);
@@ -357,9 +366,7 @@ public class Player extends Actor {
                     break;
                 }
                 case Walking: {
-                    if (shooting && attackType) {
-                        frame = shotwalk.getKeyFrame(stateTime);
-                    } else if (shooting && !attackType && attacktime <= attackingtimemax) {
+                    if (shooting && attacktime <= attackingtimemax ) {
                         frame = attackstand.getKeyFrame(attacktime);
                     } else {
                         frame = walk.getKeyFrame(stateTime);
@@ -377,7 +384,7 @@ public class Player extends Actor {
                     break;
                 }
                 case Jumping: {
-                    if (shooting) {
+                    if (shooting && (attacktime <= attackingtimemax)) {
                         if (velocity.y >= 0) {
                             if (attackType) {
                                 frame = shotjump.getKeyFrame(0);
@@ -410,6 +417,11 @@ public class Player extends Actor {
                     break;
                 }
             }
+            if((stateTime-thudTime>0.1f)&&
+                    (frame == walk.getKeyFrame(0.2f)
+                            || frame == walk.getKeyFrame(0.4f)
+                    ))
+            { if(!died)thudSound.play(0.5f);thudTime=stateTime;}
             switch (headstate) {
                 case Calm:
                     headframe = head.getKeyFrame(0);

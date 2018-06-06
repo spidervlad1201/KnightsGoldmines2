@@ -12,11 +12,13 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pool;
-import com.vakuor.knightsandgoldmines.GameLogic;
+import com.vakuor.knightsandgoldmines.view.Game;
 
-import static com.vakuor.knightsandgoldmines.GameLogic.GRAVITY;
-import static com.vakuor.knightsandgoldmines.GameLogic.myTile;
-import static com.vakuor.knightsandgoldmines.GameLogic.tileDebug;
+import static com.vakuor.knightsandgoldmines.view.Game.GRAVITY;
+import static com.vakuor.knightsandgoldmines.view.Game.deltaTime;
+import static com.vakuor.knightsandgoldmines.view.Game.myTile;
+import static com.vakuor.knightsandgoldmines.view.Game.tileDebug;
+
 
 public class Enemy extends Actor {
     public static float WIDTH;
@@ -98,10 +100,10 @@ public class Enemy extends Actor {
 
         addVelocity(0, GRAVITY);
         // multiply by delta time so we know how far we go in this frame
-        velocity.scl(GameLogic.deltaTime);
+        velocity.scl(deltaTime);
         position.x+=0.25f; position.y+=0.2f;
         WIDTH-=0.5f; HEIGHT-=0.4f;
-        // perform collision detection & response, on each axis, separately//todo:вынести эту хрень отсюда
+        // perform collision detection & response, on each axis, separately//todo:вынести эту inere отсюда
         // if the player is moving right, check the tiles to the right of it's
         // right bounding box edge, otherwise check the ones to the left
         Rectangle playerRect = rectPool.obtain();
@@ -152,7 +154,7 @@ public class Enemy extends Actor {
                 if (velocity.y > 0) {
                     position.y = tile.y - HEIGHT;
                     // we hit a block jumping upwards, let's destroy it!
-                    TiledMapTileLayer layer = (TiledMapTileLayer) GameLogic.map.getLayers().get("walls");
+                    TiledMapTileLayer layer = (TiledMapTileLayer) Game.map.getLayers().get("walls");
                     layer.setCell((int) tile.x, (int) tile.y, null);
                 } else {
                     position.y = tile.y + tile.height;
@@ -168,35 +170,35 @@ public class Enemy extends Actor {
         position.x-=0.25f; position.y-=0.2f;
         WIDTH+=0.5f; HEIGHT+=0.4f;
         position.add(velocity);
-        velocity.scl(1 / GameLogic.deltaTime);
+        velocity.scl(1 / Game.deltaTime);
         // Apply damping to the velocity on the x-axis so we don't
         // walk infinitely once a key was pressed
         velocity.x *= DAMPING;
     }
 
     public void attack(){
-        GameLogic.player.hit(GameLogic.player.position.x >= position.x);
+        Game.player.hit(Game.player.position.x >= position.x);
         timesinceattacked = 0;
         zaderjka = 0;
         attacking=false;
     }
 
     public void updateTimers(){
-        timesincejumped+=GameLogic.deltaTime;
-        timesinceattacked+=GameLogic.deltaTime;
+        timesincejumped+=Game.deltaTime;
+        timesinceattacked+=Game.deltaTime;
     }
     @Override
     public void act(float deltaTime) {
         if (!died) {
             updateTimers();
 
-            if (GameLogic.player.position.x > position.x + WIDTH || GameLogic.player.position.x < position.x - WIDTH) {
+            if (Game.player.position.x > position.x + WIDTH || Game.player.position.x < position.x - WIDTH) {
                 attacking = false;
-                if (Math.abs(GameLogic.player.position.x + GameLogic.player.WIDTH / 2 - position.x + WIDTH / 2) > WIDTH * 3)
+                if (Math.abs(Game.player.position.x + Game.player.WIDTH / 2 - position.x + WIDTH / 2) > WIDTH * 3)
                     zaderjka = 0;
-                move(position.x < GameLogic.player.position.x);
-            } else if (timesinceattacked > timeforattack && ((GameLogic.player.position.y <= position.y + HEIGHT) && (GameLogic.player.position.y + GameLogic.player.HEIGHT >= position.y))) {//attack(GameLogic.player);
-                zaderjka += GameLogic.deltaTime;
+                move(position.x < Game.player.position.x);
+            } else if (timesinceattacked > timeforattack && ((Game.player.position.y <= position.y + HEIGHT) && (Game.player.position.y + Game.player.HEIGHT >= position.y))) {//attack(Game.player);
+                zaderjka += Game.deltaTime;
                 attacking = true;
                 if (zaderjka >= zaderjkamax) {
                     attack();
@@ -206,7 +208,7 @@ public class Enemy extends Actor {
                 attacking = false;
             }
 
-            if (GameLogic.player.position.y > position.y + GameLogic.player.HEIGHT && timesincejumped >= jumptimeconst && Math.abs(GameLogic.player.position.x - position.x) < WIDTH && isGrounded()) {
+            if (Game.player.position.y > position.y + Game.player.HEIGHT && timesincejumped >= jumptimeconst && Math.abs(Game.player.position.x - position.x) < WIDTH && isGrounded()) {
                 jump();
                 timesincejumped = 0;
             }
@@ -216,7 +218,7 @@ public class Enemy extends Actor {
 
             if (deltaTime > 0.1f) deltaTime = 0.1f;
 
-            stateTime += GameLogic.deltaTime;
+            stateTime += Game.deltaTime;
 
             if (climbingTime > climbconst) {
                 climb = false;
@@ -237,7 +239,7 @@ public class Enemy extends Actor {
             super.act(deltaTime);
         } else {
             System.out.println("IMDIED");
-            GameLogic.removeEnemy(this);
+            Game.removeEnemy(this);
         }
     }
     @Override
@@ -245,7 +247,7 @@ public class Enemy extends Actor {
 
         TextureRegion frame = null;
 
-        facesRight = position.x < GameLogic.player.position.x;
+        facesRight = position.x < Game.player.position.x;
         if(attacking)state=State.Shooting;
 
         switch (state) {
@@ -270,7 +272,7 @@ public class Enemy extends Actor {
 
     }
     public void getTiles(int startX, int startY, int endX, int endY, Array<Rectangle> tiles, boolean tileDebug, TiledMapTile myTile) {
-        TiledMapTileLayer layer = (TiledMapTileLayer) GameLogic.map.getLayers().get("walls");
+        TiledMapTileLayer layer = (TiledMapTileLayer) Game.map.getLayers().get("walls");
         rectPool.freeAll(tiles);
         tiles.clear();
         for (int y = startY; y <= endY; y++) {
@@ -293,8 +295,8 @@ public class Enemy extends Actor {
         health-=1;
 
         died = health <=0;
-        if(died) GameLogic.player.score++;
-        //GameLogic.healthLabel.setText(String.valueOf(health));//todo:заменить на enemylabel? (nezya tam iterator, mnogo vragov)
+        if(died) Game.player.score++;
+        //Game.healthLabel.setText(String.valueOf(health));//todo:заменить на enemylabel? (nezya tam iterator, mnogo vragov)
     }
 
     public void jump(){

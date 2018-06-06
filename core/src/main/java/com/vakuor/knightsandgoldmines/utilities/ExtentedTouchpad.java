@@ -2,7 +2,7 @@ package com.vakuor.knightsandgoldmines.utilities;
 
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Touchpad;
-import com.vakuor.knightsandgoldmines.GameLogic;
+import com.vakuor.knightsandgoldmines.view.Game;
 
 public class ExtentedTouchpad extends Touchpad {
 
@@ -10,7 +10,7 @@ public class ExtentedTouchpad extends Touchpad {
 
     @Override
     public void act(float delta) {
-        if(isTouched()) touchTime+= GameLogic.deltaTime;
+        if(isTouched()) touchTime+= Game.deltaTime;
         else touchTime = 0;
         super.act(delta);
     }
